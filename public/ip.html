@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IP Address and Location</title>
+</head>
+<body>
+  <h1>IP Address and Location</h1>
+  <p id="ip-address">Your IP Address will appear here.</p>
+  <p id="location">Your Location will appear here.</p>
+
+  <script>
+    // Отправляем запрос на сервер для получения IP-адреса и локации
+    fetch('/get-ip-location')
+    .then(response => response.json())
+    .then(data => {
+      const ipAddressElement = document.getElementById('ip-address');
+      const locationElement = document.getElementById('location');
+
+      ipAddressElement.textContent = `Your IP Address: ${data.ip}`;
+      locationElement.textContent = `Your Location: ${data.city}, ${data.country}`;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  </script>
+</body>
+</html>
