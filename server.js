@@ -22,8 +22,8 @@ app.post('/upload', upload.array('files'), (req, res) => {
 
 // Добавляем маршрут для отображения странички
 app.get('/games', (req, res) => {
-  // Отправляем файл index.html из папки public
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Отправляем файл games.html из папки public
+  res.sendFile(path.join(__dirname, 'public', 'games.html'));
 });
 
 const server = http.createServer((req, res) => {
