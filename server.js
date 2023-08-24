@@ -20,6 +20,12 @@ app.post('/upload', upload.array('files'), (req, res) => {
   res.send('Files uploaded successfully');
 });
 
+// Добавляем маршрут для отображения странички
+app.get('/games', (req, res) => {
+  // Отправляем файл index.html из папки public
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const server = http.createServer((req, res) => {
   // Redirect to the specified URL
   res.writeHead(302, { 'Location': 'https://swkgstudio.github.io/' });
