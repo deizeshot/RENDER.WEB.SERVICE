@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drag and Drop File Upload</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+  }
+  #drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div id="drop-area">
+  <p>Drag and drop files here</p>
+  <input type="file" id="file-input" multiple>
+</div>
+<script>
+  const dropArea = document.getElementById('drop-area');
+
+  dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.classList.add('highlight');
+  });
+
+  dropArea.addEventListener('dragleave', () => {
+    dropArea.classList.remove('highlight');
+  });
+
+  dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('highlight');
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+  });
+
+  const fileInput = document.getElementById('file-input');
+
+  fileInput.addEventListener('change', (e) => {
+    const files = e.target.files;
+    handleFiles(files);
+  });
+
+  function handleFiles(files) {
+  for (const file of files) {
+    console.log('Uploading:', file.name);
+    
+    // Создаем объект FormData и добавляем файлы
+    const formData = new FormData();
+    formData.append('files', file);
+
+    // Отправляем запрос на сервер
+    fetch('/upload', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.text())
+    .then(result => {
+      console.log('Server response:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  }
+}
+
+</script>
+</body>
+</html>
