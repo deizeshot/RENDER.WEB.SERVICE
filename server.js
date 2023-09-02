@@ -36,3 +36,57 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+app.get('/nativeads', (req, res) => {
+  fs.readFile('nativeads.json', 'utf8', (err, data) => {
+      if (err) {
+          console.error(err);
+          res.status(500).json({ error: 'Internal Server Error', details: err.message });
+          return;
+      }
+      res.json(JSON.parse(data));
+  });
+});
+
+app.post('/nativeads', async (req, res) => {
+  try {
+      const newData = req.body;
+      await fs.writeFile('nativeads.json', JSON.stringify(newData, null, 2));
+      res.send('Data updated successfully');
+  } catch (error) {
+      console.error('Error updating data:', error);
+      res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get("/nativeadssite", (req, res) => {
+const filePath = path.join(__dirname, "nativeads.html");
+res.sendFile(filePath);
+});
+
+app.get("/native_ads_load.php", (req, res) => {
+// Читаем содержимое файла nativeads.json
+fs.readFile("nativeads.json", "utf8", (err, data) => {
+  if (err) {
+    console.error("Error loading data:", err);
+    res.status(500).send("Error loading data");
+  } else {
+    // Отправляем содержимое как JSON
+    res.setHeader("Content-Type", "application/json");
+    res.send(data);
+  }
+});
+});
+
+app.post("/native_ads_save.php", (req, res) => {
+const newData = req.body;
+// Записываем новые данные в файл nativeads.json
+fs.writeFile("nativeads.json", JSON.stringify(newData, null, 2), err => {
+  if (err) {
+    console.error("Error saving data:", err);
+    res.status(500).send("Error saving data");
+  } else {
+    res.send("Data saved successfully");
+  }
+});
+});

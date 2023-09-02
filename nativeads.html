@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Native Ads Table</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        img {
+            max-width: 100px;
+            max-height: 100px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Native Ads Table</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Link</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Здесь будут добавляться строки из JSON -->
+        </tbody>
+    </table>
+
+    <!-- Форма добавления новой записи -->
+    <h2>Add New Ad</h2>
+    <form id="addForm">
+        <label for="category">Category:</label>
+        <input type="text" id="category" name="category" required><br><br>
+        <label for="image">Image URL:</label>
+        <input type="url" id="image" name="image" required><br><br>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+        <label for="link">Link:</label>
+        <input type="url" id="link" name="link" required><br><br>
+        <button type="submit">Add Ad</button>
+    </form>
+  
+    <div id="editImageModal" style="display: none;">
+        <h2>Edit Image Link</h2>
+        <form id="editImageForm">
+            <input type="hidden" id="editImageId" name="editImageId">
+            <label for="editImageLink">New Image Link:</label>
+            <input type="url" id="editImageLink" name="editImageLink" required><br><br>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+
+    <script>
+        async function fetchAds() {
+            try {
+                const response = await fetch('native_ads_load.php');
+                const data = await response.json();
+                const tableBody = document.getElementById('tableBody');
+
+                tableBody.innerHTML = '';
+
+                data.forEach(ad => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${ad.category}</td>
+                        <td><img src="${ad.image}" alt="${ad.title}" onclick="editImageLink('${ad.id}', '${ad.image}')"></td>
+                        <td>${ad.title}</td>
+                        <td><a href="${ad.link}" target="_blank">${ad.link}</a></td>
+                        <td><button onclick="deleteAd('${ad.id}')">Delete</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching ads:', error);
+            }
+        }
+
+        async function deleteAd(id) {
+            // Получаем текущие данные
+            try {
+                const response = await fetch('native_ads_load.php');
+                const data = await response.json();
+
+                // Удаляем запись с указанным id
+                const updatedData = data.filter(ad => ad.id !== id);
+
+                // Сохраняем обновленные данные
+                await fetch('native_ads_save.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                // Перезагружаем таблицу
+                fetchAds();
+            } catch (error) {
+                console.error('Error deleting ad:', error);
+            }
+        }
+
+        // Добавление обработчика события для формы добавления
+        document.getElementById('addForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Получение данных из полей формы
+            const category = document.getElementById('category').value;
+            const image = document.getElementById('image').value;
+            const title = document.getElementById('title').value;
+            const link = document.getElementById('link').value;
+
+            // Получаем текущие данные
+            try {
+                const response = await fetch('native_ads_load.php');
+                const data = await response.json();
+
+                // Создаем новую запись
+                const newAd = {
+                    id: Date.now().toString(), // временный идентификатор
+                    category,
+                    image,
+                    title,
+                    link
+                };
+
+                // Обновляем данные и сохраняем
+                const updatedData = [...data, newAd];
+                await fetch('native_ads_save.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                // Перезагружаем таблицу
+                fetchAds();
+            } catch (error) {
+                console.error('Error adding ad:', error);
+            }
+        });
+
+        // Загрузка данных при загрузке страницы
+        fetchAds();
+
+       async function editImageLink(id, imageLink) {
+    const editImageModal = document.getElementById('editImageModal');
+    const editImageForm = document.getElementById('editImageForm');
+    const editImageId = document.getElementById('editImageId');
+    const editImageLinkInput = document.getElementById('editImageLink');
+
+    // Заполнение формы данными
+    editImageId.value = id;
+    editImageLinkInput.value = imageLink;
+
+    // Отображение модального окна
+    editImageModal.style.display = 'block';
+
+    // Обработчик формы редактирования
+    editImageForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Получение данных из полей формы
+        const newImageLink = editImageLinkInput.value;
+
+        // Получаем текущие данные
+        try {
+            const response = await fetch('native_ads_load.php');
+            const data = await response.json();
+
+            // Находим запись с указанным id и обновляем ссылку на изображение
+            const updatedData = data.map(ad => {
+                if (ad.id === id) {
+                    // Обновляем URL изображения
+                    ad.image = newImageLink;
+                    return ad;
+                }
+                return ad;
+            });
+
+            // Сохраняем обновленные данные
+            await fetch('native_ads_save.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            });
+
+            // Закрываем модальное окно
+            editImageModal.style.display = 'none';
+
+            // Перезагружаем таблицу
+            fetchAds();
+        } catch (error) {
+            console.error('Error editing image link:', error);
+        }
+    });
+}
+      
+// Генерация уникальных идентификаторов для изображений в таблице
+data.forEach(ad => {
+    ad.id = generateUniqueId();
+});
+
+function generateUniqueId() {
+    return '_' + Math.random().toString(36).substr(2, 9);
+}
+
+
+// Обновление изображения в таблице
+const imageElement = document.getElementById(`image-${id}`);
+if (imageElement) {
+    imageElement.src = newImageLink;
+}
+
+    </script>
+</body>
+</html>
